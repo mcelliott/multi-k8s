@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t hellomattelliott/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true hellomattelliott/react-test npm run test
+
+after_success:
+  - docker build -t hellomattelliott/multi-client ./client
+  - docker build -t hellomattelliott/multi-nginx ./nginx
+  - docker build -t hellomattelliott/multi-server ./server
+  - docker build -t hellomattelliott/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push hellomattelliott/multi-client
+  - docker push hellomattelliott/multi-nginx
+  - docker push hellomattelliott/multi-server
+  - docker push hellomattelliott/multi-worker
